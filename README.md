@@ -14,7 +14,7 @@ npm install --save leadssu-webmaster-api
 ## Usage
     const LeadssuApi = require('leadssu-webmaster-api');
     const api = new LeadssuApi(token);
-    let links = await api.getProfile();
+    let profile = await api.getProfile();
 
 ## API
 * getProfile(): Object

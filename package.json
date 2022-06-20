@@ -1,6 +1,6 @@
 {
   "name": "leadssu-webmaster-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "LeadssuApi.js",
   "description": "leads.su API integration",
   "repository": {
