@@ -29,7 +29,7 @@ class LeadssuApi {
       holdAdv: Number(data.data.hold),
       availableBalance: Number(data.data.available_balance),
       withdrawal: Number(data.data.ordered),
-      withdrawn: Number(data.data.paid),
+      withdrawn: Number(data.data.paid)
     }
   }
 
@@ -38,19 +38,24 @@ class LeadssuApi {
     if (data.data && Array.isArray(data.data)) {
       return data.data.map(it => ({
         id: Number(it.id),
-        name: it.name,
+        name: it.name
       }));
     }
     return [];
   }
 
   async getOffersData(offerId, channelId) {
-    let action = 'offers/connectedPlatforms';
+    let action = 'offers';
     let params = new Map();
     if (offerId) {
-      params.set('id', offerId);
+      if (Array.isArray(offerId)) {
+        params.set('ids', offerId);
+      } else {
+        params.set('id', offerId);
+      }
     }
     if (channelId) {
+      action = 'offers/connectedPlatforms';
       params.set('platform_id', channelId);
     }
     let result = [];
@@ -147,7 +152,7 @@ class LeadssuApi {
         commissionOpen: it.pending_payout || 0,
         commissionApproved: it.payout || 0,
         cr: it.clicks ? Math.round(it.conversions / it.clicks * 10000) / 100 : 0,
-        ar: it.conversions ? Math.round(it.conversions_approved / it.conversions * 10000) / 100 : 0,
+        ar: it.conversions ? Math.round(it.conversions_approved / it.conversions * 10000) / 100 : 0
       })));
     }
     return result;
@@ -195,7 +200,10 @@ class LeadssuApi {
 
   async apiRequest(action, params = new Map()) {
     params.set('token', this.token)
-    let url = new URL(action, API_URL).toString() + '?' + new URLSearchParams(params).toString();
+    let url = new URL(action, API_URL).toString() + '?';
+    for (let [key, value] of params) {
+      url += key + '=' + (Array.isArray(value) ? JSON.stringify(value) : value) + '&';
+    }
     // console.info('LeadssuApiRequest', new Date().toLocaleString(), url);
     let result;
     try {
