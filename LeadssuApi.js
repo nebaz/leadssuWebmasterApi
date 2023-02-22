@@ -207,7 +207,8 @@ class LeadssuApi {
     // console.info('LeadssuApiRequest', new Date().toLocaleString(), url);
     let result;
     try {
-      result = await (await fetch(url)).json();
+      result = await (await fetch(url)).text();
+      result = JSON.parse(result, this.reviver.bind(result));
     } catch (e) {
       console.error('leads.su api error', e);
       return false;
@@ -217,6 +218,20 @@ class LeadssuApi {
       return result;
     }
     return false;
+  }
+
+  reviver(key, value) {
+    if (typeof value !== 'number' || Number.MAX_SAFE_INTEGER > value) {
+      return value;
+    }
+    const maxLen = Number.MAX_SAFE_INTEGER.toString().length - 1;
+    const needle = String(value).substr(0, maxLen);
+    const re = new RegExp(needle + '\\d+');
+    const matches = this.match(re);
+    if (matches) {
+      return matches[0];
+    }
+    return value;
   }
 
 }

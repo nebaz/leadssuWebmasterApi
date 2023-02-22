@@ -1,6 +1,6 @@
 {
   "name": "leadssu-webmaster-api",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "LeadssuApi.js",
   "description": "leads.su API integration",
   "repository": {
@@ -11,6 +11,6 @@
   "author": "Nebaz <nebaz@ya.ru>",
   "license": "MIT",
   "dependencies": {
-    "node-fetch": "~2.6.7"
+    "node-fetch": "~2.6.9"
   }
 }
