@@ -24,5 +24,6 @@ npm install --save leadssu-webmaster-api
 * getLeadsByOfferId(timestamp dateFrom, timestamp dateTo, int offerId?, int channelId?): Array< Object >
 * getStatisticsOffers(timestamp dateFrom, timestamp dateTo, int offerId?, int channelId?, string subid?, string group?, string subgroup?): Array< Object >
 * getWebmasterCommissions(timestamp dateFrom, timestamp dateTo, int offerId?): Object
+* getCategories()
 * getOfferLinkByOfferId(int offerId, int channelId): String
 * apiRequest(action, params) - native leads.su api request

@@ -58,6 +58,7 @@ class LeadssuApi {
       action = 'offers/connectedPlatforms';
       params.set('platform_id', channelId);
     }
+    params.set('geo', 1);
     let result = [];
     let offset = 0;
     let limit = 500;
@@ -177,6 +178,16 @@ class LeadssuApi {
       return null;
     }
     return 'https://pxl.leads.su/aff_c?offer_id=' + offerId + '&pltfm_id=' + channelId;
+  }
+
+  async getCategories() {
+    let action = 'dictionary/categories';
+    let result = await this.apiRequest(action);
+    if (result) {
+      return {ok: true, result: result.data};
+    } else {
+      return {ok: false};
+    }
   }
 
   #formatDate(timestamp) {
