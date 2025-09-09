@@ -73,7 +73,7 @@ class LeadssuApi {
       result = result.concat(result, apiData.data);
       offset += limit;
     } while (offset < apiData.count)
-    return result;
+    return {ok: true, result};
   }
 
   async getLeadsByOfferId(dateFrom, dateTo, offerId = null, channelId = null) {
@@ -173,11 +173,11 @@ class LeadssuApi {
   }
 
   async getOfferLinkByOfferId(offerId, channelId) {
-    let offerData = (await this.getOffersData(offerId, channelId))[0];
-    if (!offerData) {
-      return null;
+    let {ok, result: offerData} = await this.getOffersData(offerId, channelId);
+    if (ok && offerData[0]) {
+      return 'https://pxl.leads.su/aff_c?offer_id=' + offerId + '&pltfm_id=' + channelId;
     }
-    return 'https://pxl.leads.su/aff_c?offer_id=' + offerId + '&pltfm_id=' + channelId;
+    return null;
   }
 
   async getCategories() {
