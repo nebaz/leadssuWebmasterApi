@@ -20,10 +20,10 @@ npm install --save leadssu-webmaster-api
 * getProfile(): Object
 * getBalance(): Object
 * getTrafficChannels(): Array< Object >
-* getOffersData(int offerId?, int channelId?): Array< Object >
-* getLeadsByOfferId(timestamp dateFrom, timestamp dateTo, int offerId?, int channelId?): Array< Object >
-* getStatisticsOffers(timestamp dateFrom, timestamp dateTo, int offerId?, int channelId?, string subid?, string group?, string subgroup?): Array< Object >
+* getOffersData(int offerId?, int channelId?): Object
+* getLeadsByOfferId(timestamp dateFrom, timestamp dateTo, int offerId?, int channelId?): Object
+* getStatisticsOffers(timestamp dateFrom, timestamp dateTo, int offerId?, int channelId?, string subid?, string group?, string subgroup?): Object
 * getWebmasterCommissions(timestamp dateFrom, timestamp dateTo, int offerId?): Object
-* getCategories()
-* getOfferLinkByOfferId(int offerId, int channelId): String
+* getCategories(): Object
+* getOfferLinkByOfferId(int offerId, int channelId): Object
 * apiRequest(action, params) - native leads.su api request

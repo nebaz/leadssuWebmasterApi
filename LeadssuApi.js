@@ -111,7 +111,7 @@ class LeadssuApi {
       }
       offset += limit;
     } while (offset < apiData.count)
-    return result;
+    return {ok: true, result};
   }
 
   /**
@@ -155,8 +155,9 @@ class LeadssuApi {
         cr: it.clicks ? Math.round(it.conversions / it.clicks * 10000) / 100 : 0,
         ar: it.conversions ? Math.round(it.conversions_approved / it.conversions * 10000) / 100 : 0
       })));
+      return {ok: true, result};
     }
-    return result;
+    return {ok: false};
   }
 
   async getWebmasterCommissions(dateFrom, dateTo, offerId = null) {
@@ -175,9 +176,9 @@ class LeadssuApi {
   async getOfferLinkByOfferId(offerId, channelId) {
     let {ok, result: offerData} = await this.getOffersData(offerId, channelId);
     if (ok && offerData[0]) {
-      return 'https://pxl.leads.su/aff_c?offer_id=' + offerId + '&pltfm_id=' + channelId;
+      return {ok: true, result: 'https://pxl.leads.su/aff_c?offer_id=' + offerId + '&pltfm_id=' + channelId};
     }
-    return null;
+    return {ok: false};
   }
 
   async getCategories() {
