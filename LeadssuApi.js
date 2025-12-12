@@ -16,32 +16,39 @@ class LeadssuApi {
 
   async getProfile() {
     let profile = await this.apiRequest('account');
-    return profile?.data;
+    let ok = Boolean(profile?.data);
+    return {ok, result: profile?.data};
   }
 
   async getBalance() {
     let data = await this.apiRequest('account/balance');
     if (!data.data) {
-      return false;
+      return {ok: false};
     }
     return {
-      mainBalance: Number(data.data.balance),
-      holdAdv: Number(data.data.hold),
-      availableBalance: Number(data.data.available_balance),
-      withdrawal: Number(data.data.ordered),
-      withdrawn: Number(data.data.paid)
+      ok: true,
+      result: {
+        mainBalance: Number(data.data.balance),
+        holdAdv: Number(data.data.hold),
+        availableBalance: Number(data.data.available_balance),
+        withdrawal: Number(data.data.ordered),
+        withdrawn: Number(data.data.paid)
+      }
     }
   }
 
   async getTrafficChannels() {
     let data = await this.apiRequest('platforms');
     if (data.data && Array.isArray(data.data)) {
-      return data.data.map(it => ({
-        id: Number(it.id),
-        name: it.name
-      }));
+      return {
+        ok: true,
+        result: data.data.map(it => ({
+          id: Number(it.id),
+          name: it.name
+        }))
+      };
     }
-    return [];
+    return {ok: false};
   }
 
   async getOffersData(offerId, channelId) {
@@ -161,16 +168,17 @@ class LeadssuApi {
   }
 
   async getWebmasterCommissions(dateFrom, dateTo, offerId = null) {
-    let stats = await this.getStatisticsOffers(dateFrom, dateTo, offerId);
+    let {ok, result: stats} = await this.getStatisticsOffers(dateFrom, dateTo, offerId);
     let commissionRejected = 0;
     let commissionOpen = 0;
     let commissionApproved = 0;
-    for (let item of stats) {
-      commissionRejected = Number((commissionRejected + item.commissionRejected).toFixed(2));
-      commissionOpen = Number((commissionOpen + item.commissionOpen).toFixed(2));
-      commissionApproved = Number((commissionApproved + item.commissionApproved).toFixed(2));
+    if (ok) {
+      for (let item of stats) {
+        commissionOpen = Number((commissionOpen + item.commissionOpen).toFixed(2));
+        commissionApproved = Number((commissionApproved + item.commissionApproved).toFixed(2));
+      }
     }
-    return {commissionRejected, commissionOpen, commissionApproved};
+    return {ok, result: {commissionRejected, commissionOpen, commissionApproved}};
   }
 
   async getOfferLinkByOfferId(offerId, channelId) {

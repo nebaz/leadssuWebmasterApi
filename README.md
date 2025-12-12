@@ -19,7 +19,7 @@ npm install --save leadssu-webmaster-api
 ## API
 * getProfile(): Object
 * getBalance(): Object
-* getTrafficChannels(): Array< Object >
+* getTrafficChannels(): Object
 * getOffersData(int offerId?, int channelId?): Object
 * getLeadsByOfferId(timestamp dateFrom, timestamp dateTo, int offerId?, int channelId?): Object
 * getStatisticsOffers(timestamp dateFrom, timestamp dateTo, int offerId?, int channelId?, string subid?, string group?, string subgroup?): Object
