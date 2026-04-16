@@ -1,4 +1,3 @@
-const fetch = require('node-fetch');
 const API_URL = 'https://api.leads.su/webmaster/';
 const STATUS_REJECTED = 'rejected';
 const STATUS_OPEN = 'open';
@@ -15,15 +14,15 @@ class LeadssuApi {
   }
 
   async getProfile() {
-    let profile = await this.apiRequest('account');
+    let {result: profile} = await this.apiRequest('account');
     let ok = Boolean(profile?.data);
     return {ok, result: profile?.data};
   }
 
   async getBalance() {
-    let data = await this.apiRequest('account/balance');
+    let {ok, result: data} = await this.apiRequest('account/balance');
     if (!data.data) {
-      return {ok: false};
+      return {ok: false, errorMessage: data.errorMessage};
     }
     return {
       ok: true,
@@ -38,17 +37,17 @@ class LeadssuApi {
   }
 
   async getTrafficChannels() {
-    let data = await this.apiRequest('platforms');
-    if (data.data && Array.isArray(data.data)) {
+    let {ok, result} = await this.apiRequest('platforms');
+    if (Array.isArray(result?.data)) {
       return {
         ok: true,
-        result: data.data.map(it => ({
+        result: result.data.filter(it => it.status === 'active').map(it => ({
           id: Number(it.id),
           name: it.name
         }))
       };
     }
-    return {ok: false};
+    return {ok: false, errorMessage: data.errorMessage};
   }
 
   async getOffersData(offerId, channelId) {
@@ -74,12 +73,12 @@ class LeadssuApi {
       params.set('offset', offset);
       params.set('limit', limit);
       apiData = await this.apiRequest(action, params);
-      if (!apiData) {
-        return false;
+      if (!apiData.ok || !Array.isArray(apiData?.result?.data)) {
+        return {ok: false, errorMessage: apiData.errorMessage};
       }
-      result = result.concat(result, apiData.data);
+      result = result.concat(result, apiData.result.data);
       offset += limit;
-    } while (offset < apiData.count)
+    } while (offset < apiData.result.count)
     return {ok: true, result};
   }
 
@@ -104,8 +103,11 @@ class LeadssuApi {
       params.set('offset', offset);
       params.set('limit', limit);
       apiData = await this.apiRequest(action, params);
-      if (apiData && Array.isArray(apiData.data) && apiData.data.length) {
-        apiData.data.map(it => {
+      if (!apiData.ok || !Array.isArray(apiData?.result?.data)) {
+        return {ok: false, errorMessage: apiData.errorMessage};
+      }
+      if (apiData && Array.isArray(apiData.result.data) && apiData.result.data.length) {
+        apiData.result.data.map(it => {
           it.orderId = it.id;
           it.offerId = it.offer_id;
           it.status = this.#getLeadStatus(it.status);
@@ -114,10 +116,10 @@ class LeadssuApi {
           it.subaccount2 = it.aff_sub2;
           it.leadTime = new Date(it.created).valueOf();
         });
-        result = result.concat(apiData.data);
+        result = result.concat(apiData.result.data);
       }
       offset += limit;
-    } while (offset < apiData.count)
+    } while (offset < apiData.result.count)
     return {ok: true, result};
   }
 
@@ -125,7 +127,7 @@ class LeadssuApi {
    * short grouped statistics by offer and chanel
    * @return Array {offerId,clicks,leadsOpen,commissionOpen,...}
    */
-  async getStatisticsOffers(dateFrom, dateTo, offerId = null, channelId = null, subid = null, group = 'year', subgroup = null) {
+  async getStatisticsOffers(dateFrom, dateTo, offerId = null, channelId = null, subid = null, group = 'all_time', subgroup = null) {
     dateFrom = this.#formatDate(dateFrom);
     dateTo = this.#formatDate(dateTo);
     let action = 'reports/summary';
@@ -148,23 +150,23 @@ class LeadssuApi {
     params.set('limit', 500);
     let result = [];
     let apiData = await this.apiRequest(action, params);
-    if (apiData && Array.isArray(apiData.data)) {
-      result = result.concat(apiData.data.map(it => ({
-        offerId: Number(it.offer_id),
-        offerName: it.offer_name,
-        clicks: it.clicks || 0,
-        leads: it.conversions || 0,
-        leadsRejected: it.conversions_rejected || 0,
-        leadsOpen: it.conversions_pending || 0,
-        leadsApproved: it.conversions_approved || 0,
-        commissionOpen: it.pending_payout || 0,
-        commissionApproved: it.payout || 0,
-        cr: it.clicks ? Math.round(it.conversions / it.clicks * 10000) / 100 : 0,
-        ar: it.conversions ? Math.round(it.conversions_approved / it.conversions * 10000) / 100 : 0
-      })));
-      return {ok: true, result};
+    if (!apiData.ok || !Array.isArray(apiData?.result?.data)) {
+      return {ok: false, errorMessage: apiData.errorMessage};
     }
-    return {ok: false};
+    result = result.concat(apiData.result.data.map(it => ({
+      offerId: Number(it.offer_id),
+      offerName: it.offer_name,
+      clicks: it.clicks || 0,
+      leads: it.conversions || 0,
+      leadsRejected: it.conversions_rejected || 0,
+      leadsOpen: it.conversions_pending || 0,
+      leadsApproved: it.conversions_approved || 0,
+      commissionOpen: it.pending_payout || 0,
+      commissionApproved: it.payout || 0,
+      cr: it.clicks ? Math.round(it.conversions / it.clicks * 10000) / 100 : 0,
+      ar: it.conversions ? Math.round(it.conversions_approved / it.conversions * 10000) / 100 : 0
+    })));
+    return {ok: true, result};
   }
 
   async getWebmasterCommissions(dateFrom, dateTo, offerId = null) {
@@ -191,7 +193,7 @@ class LeadssuApi {
 
   async getCategories() {
     let action = 'dictionary/categories';
-    let result = await this.apiRequest(action);
+    let {result} = await this.apiRequest(action);
     if (result) {
       return {ok: true, result: result.data};
     } else {
@@ -219,7 +221,7 @@ class LeadssuApi {
   }
 
   async apiRequest(action, params = new Map()) {
-    params.set('token', this.token)
+    params.set('token', this.token);
     let url = new URL(action, API_URL).toString() + '?';
     for (let [key, value] of params) {
       url += key + '=' + (Array.isArray(value) ? JSON.stringify(value) : value) + '&';
@@ -228,30 +230,18 @@ class LeadssuApi {
     let result;
     try {
       result = await (await fetch(url)).text();
-      result = JSON.parse(result, this.reviver.bind(result));
+      result = result.replace(/"id":(\d+)/g, '"id":"$1"');
+      result = JSON.parse(result);
     } catch (e) {
       console.error('leads.su api error', e);
-      return false;
+      return {ok: false, errorMessage: e?.message};
     }
     // console.info('LeadssuApiResult', new Date().toLocaleString(), result);
     if (!result.error && result.code === 200 && result.data) {
-      return result;
+      return {ok: true, result};
     }
-    return false;
-  }
-
-  reviver(key, value) {
-    if (typeof value !== 'number' || Number.MAX_SAFE_INTEGER > value) {
-      return value;
-    }
-    const maxLen = Number.MAX_SAFE_INTEGER.toString().length - 1;
-    const needle = String(value).substr(0, maxLen);
-    const re = new RegExp(needle + '\\d+');
-    const matches = this.match(re);
-    if (matches) {
-      return matches[0];
-    }
-    return value;
+    console.error('leads.su api error: ', result);
+    return {ok: false, errorMessage: result?.error?.message};
   }
 
 }
